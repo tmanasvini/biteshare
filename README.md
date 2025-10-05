@@ -14,10 +14,9 @@ A food sharing platform that connects UCLA dining halls with local shelters usin
 
 ## Tech Stack
 
-- **Frontend**: React + TypeScript + Vite + Tailwind CSS
-- **Backend**: Express.js API server
+- **Frontend**: TypeScript + CSS
+- **Backend**: Javascript
 - **AI/ML**: AWS Bedrock with Claude 3.5 Sonnet
-- **Notifications**: AWS SNS (planned)
 - **Maps**: Volunteer coordination with interactive maps
 
 ## Setup
