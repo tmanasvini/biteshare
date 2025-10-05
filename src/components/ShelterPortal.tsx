@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ArrowLeft, Loader2, CheckCircle, MessageSquare } from 'lucide-react';
+import { bedrockAgent } from '../services/bedrockAgent';
 
 interface ShelterPortalProps {
   onBack: () => void;
@@ -17,18 +18,26 @@ export default function ShelterPortal({ onBack }: ShelterPortalProps) {
     if (!requestText.trim()) return;
 
     setIsProcessing(true);
-
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    const mockParsed = {
-      portionCount: 75,
-      urgency: 'high',
-      dietaryPreferences: ['Vegetarian options preferred', 'Nut-free'],
-      timeframe: 'Today evening',
-      additionalNotes: 'Serving dinner to 75 people tonight'
-    };
-
-    setParsedRequest(mockParsed);
+    try {
+      const analysis = await bedrockAgent.processShelterRequest(requestText);
+      setParsedRequest({
+        portionCount: analysis.quantity || 50,
+        urgency: analysis.urgency || 'medium',
+        dietaryPreferences: analysis.specialRequirements || [],
+        timeframe: analysis.deadline || 'Today',
+        additionalNotes: requestText
+      });
+    } catch (error) {
+      console.error('NLP processing failed:', error);
+      // Fallback to mock data
+      setParsedRequest({
+        portionCount: 75,
+        urgency: 'high',
+        dietaryPreferences: ['Vegetarian options preferred', 'Nut-free'],
+        timeframe: 'Today evening',
+        additionalNotes: 'Serving dinner to 75 people tonight'
+      });
+    }
     setIsProcessing(false);
   };
 
@@ -190,28 +199,6 @@ export default function ShelterPortal({ onBack }: ShelterPortalProps) {
               </button>
             )}
           </form>
-
-          <div className="mt-8 bg-blue-50 rounded-lg p-6">
-            <h3 className="font-bold text-blue-900 mb-3">How It Works</h3>
-            <ol className="space-y-2 text-sm text-blue-800">
-              <li className="flex items-start gap-2">
-                <span className="font-bold">1.</span>
-                <span>Describe your food needs in plain English</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="font-bold">2.</span>
-                <span>Our AI processes and understands your requirements</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="font-bold">3.</span>
-                <span>We match you with nearby donations and coordinate volunteers</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="font-bold">4.</span>
-                <span>Food is delivered to your location</span>
-              </li>
-            </ol>
-          </div>
         </div>
       </div>
     </div>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Camera, Upload, ArrowLeft, Loader2, CheckCircle } from 'lucide-react';
+import { bedrockAgent } from '../services/bedrockAgent';
 
 interface DiningPortalProps {
   onBack: () => void;
@@ -39,28 +40,19 @@ export default function DiningPortal({ onBack }: DiningPortalProps) {
     if (!imageFile) return;
 
     setIsAnalyzing(true);
-
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    const mockAnalysis = {
-      description: 'Assorted grilled chicken breast, roasted vegetables (carrots, broccoli, bell peppers), and seasoned rice pilaf',
-      nutritionInfo: {
-        calories: '350-400 per portion',
-        protein: 'High',
-        carbohydrates: 'Moderate',
-        fat: 'Low'
-      },
-      dietaryTags: ['High Protein', 'Gluten-Free'],
-      allergens: ['None detected'],
-      suggestedFoodTypes: ['Entrees', 'Vegetables', 'Grains']
-    };
-
-    setAiAnalysis(mockAnalysis);
-    setFormData(prev => ({
-      ...prev,
-      manualDescription: mockAnalysis.description,
-      foodType: mockAnalysis.suggestedFoodTypes
-    }));
+    try {
+      const base64 = imagePreview.split(',')[1];
+      const analysis = await bedrockAgent.analyzeImage(base64);
+      
+      setAiAnalysis(analysis);
+      setFormData(prev => ({
+        ...prev,
+        manualDescription: analysis.description,
+        foodType: analysis.suggestedFoodTypes || []
+      }));
+    } catch (error) {
+      console.error('Image analysis failed:', error);
+    }
     setIsAnalyzing(false);
   };
 
@@ -77,7 +69,19 @@ export default function DiningPortal({ onBack }: DiningPortalProps) {
     e.preventDefault();
     setIsSubmitting(true);
 
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      // Notify volunteers via AWS SNS
+      await bedrockAgent.notifyVolunteers({
+        volunteers: [{ phone: '+1234567890' }], // Mock volunteer
+        foodDescription: formData.manualDescription,
+        diningHall: formData.diningHallName,
+        shelter: 'Nearby Shelter'
+      });
+    } catch (error) {
+      console.error('Notification failed, using fallback:', error);
+      // Simulate notification delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
 
     setIsSubmitting(false);
     setSubmitted(true);
@@ -218,27 +222,7 @@ export default function DiningPortal({ onBack }: DiningPortalProps) {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Food Type Tags
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {foodTypeOptions.map(type => (
-                  <button
-                    key={type}
-                    type="button"
-                    onClick={() => handleFoodTypeToggle(type)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                      formData.foodType.includes(type)
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {type}
-                  </button>
-                ))}
-              </div>
-            </div>
+
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">

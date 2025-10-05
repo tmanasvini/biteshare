@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ArrowLeft, Loader2, CheckCircle, Calendar, Clock, Car } from 'lucide-react';
+import VolunteerMap from './VolunteerMap';
 
 interface VolunteerPortalProps {
   onBack: () => void;
@@ -349,6 +350,11 @@ export default function VolunteerPortal({ onBack }: VolunteerPortalProps) {
               </p>
             )}
           </form>
+
+          <div className="mt-8 bg-blue-50 rounded-lg p-6">
+            <h3 className="font-bold text-blue-900 mb-3">Volunteer Network</h3>
+            <VolunteerMap />
+          </div>
 
           <div className="mt-8 bg-orange-50 rounded-lg p-6">
             <h3 className="font-bold text-orange-900 mb-3">What Happens Next?</h3>
